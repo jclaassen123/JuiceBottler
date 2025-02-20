@@ -12,15 +12,14 @@ ChatGPT helped with parts of this code: Of the new code Jace Claassen wrote roug
 public class Plant implements Runnable {
     public static final long PROCESSING_TIME = 5 * 1000; // Total processing time before stopping
     private static final int NUM_PLANTS = 2; // Number of plant instances
-    private static final int WORKERS_PER_PLANT = 4; // Workers per plant
+    private static final int WORKERS_PER_PLANT = 5; // Workers per plant
 
     private final Thread thread;
     private final int plantId;
     private volatile boolean timeToWork; // Flag to control plant operation
 
-    //ChatGPT helped me understand and implement parts of the input/output BlockingMailbox arrays
-    private final BlockingMailbox[] inputMailboxes; // Mailboxes for worker input
-    private final BlockingMailbox[] outputMailboxes; // Mailboxes for worker output
+    //ChatGPT helped me understand and implement parts of the blocking mailbox
+    private final BlockingMailbox[] inputMailboxes; // Mailboxes for workers
     private int orangesProvided; // Count of provided oranges
     private int orangesProcessed; // Count of processed oranges
 
@@ -29,12 +28,10 @@ public class Plant implements Runnable {
         this.thread = new Thread(this, "Plant-" + plantId);
         this.timeToWork = true;
         this.inputMailboxes = new BlockingMailbox[WORKERS_PER_PLANT];
-        this.outputMailboxes = new BlockingMailbox[WORKERS_PER_PLANT];
 
         // Initialize mailboxes for communication between workers
         for (int i = 0; i < WORKERS_PER_PLANT; i++) {
             inputMailboxes[i] = new BlockingMailbox();
-            outputMailboxes[i] = new BlockingMailbox();
         }
     }
 
@@ -116,17 +113,16 @@ public class Plant implements Runnable {
             if (orange == null) continue; // Skip if no orange available
 
             System.out.println("Worker " + workerId + " in Plant " + plantId + " processing orange at state: " + orange.getState());
-
-            if (orange.getState() != Orange.State.Bottled) {
-                orange.runProcess(); // Process orange to next state
-            } else {
-                orangesProcessed++; // Count processed oranges
+            if (orange.getState() == Orange.State.Processed) {
+                orangesProcessed++;
+                continue; // Don't pass it to the next worker!
             }
+
+            orange.runProcess();
 
             // Pass orange to the next worker if applicable
             if (workerId < WORKERS_PER_PLANT - 1) {
-                outputMailboxes[workerId].put(orange);
-                inputMailboxes[workerId + 1].put(outputMailboxes[workerId].get());
+                inputMailboxes[workerId + 1].put(orange);
             }
         }
     }
