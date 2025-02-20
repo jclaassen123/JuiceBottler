@@ -1,3 +1,10 @@
+/*
+Filename: Orange.java
+Author: Nate Williams
+Description: This class defines the different states of an orange while being processed.
+Utilized by the Plant.java class through task and data parallelization.
+ */
+
 public class Orange {
     public enum State {
         Fetched(15),
@@ -41,6 +48,7 @@ public class Orange {
         }
         doWork();
         state = state.getNext();
+
     }
 
     private void doWork() {
