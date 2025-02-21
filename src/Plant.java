@@ -6,7 +6,7 @@ Through data and task parallelization with threads there will be multiple orange
 on at the same time. Each thread is responsible for different states of the orange juice making
 process.
 
-ChatGPT helped with parts of this code: Of the new code Jace Claassen wrote roughly 70% of it.
+ChatGPT helped with parts of this code: Of the new code Jace Claassen wrote roughly 80% of it.
 */
 
 public class Plant implements Runnable {
@@ -39,7 +39,6 @@ public class Plant implements Runnable {
      * Starts the plant processing by starting the plant thread.
      */
     public void startPlant() {
-        System.out.println("Starting Plant " + plantId);
         thread.start(); // Start plant processing
     }
 
@@ -47,7 +46,6 @@ public class Plant implements Runnable {
      * Stops the plant and signals the workers to stop.
      */
     public void stopPlant() {
-        System.out.println("Stopping Plant " + plantId);
         timeToWork = false; // Signal plant to stop
         for (BlockingMailbox mailbox : inputMailboxes) {
             mailbox.signalStop(); // Notify workers to stop waiting
@@ -84,7 +82,6 @@ public class Plant implements Runnable {
         // Provide oranges while the plant is running
         while (timeToWork) {
             Orange orange = new Orange();
-            System.out.println("Plant " + plantId + " provided a new orange.");
             inputMailboxes[0].put(orange); // Send orange to first worker
             orangesProvided++;
         }
@@ -97,8 +94,6 @@ public class Plant implements Runnable {
                 System.err.println("Error stopping worker thread in Plant " + plantId);
             }
         }
-
-        System.out.println("Plant " + plantId + " stopped.");
     }
 
     /**
@@ -112,7 +107,6 @@ public class Plant implements Runnable {
             Orange orange = inputMailboxes[workerId].get(); // Get orange from previous stage
             if (orange == null) continue; // Skip if no orange available
 
-            System.out.println("Worker " + workerId + " in Plant " + plantId + " processing orange at state: " + orange.getState());
             if (orange.getState() == Orange.State.Processed) {
                 orangesProcessed++;
                 continue; // Don't pass it to the next worker!
@@ -160,9 +154,7 @@ public class Plant implements Runnable {
      * @return The number of wasted oranges.
      */
     public int getWaste() {
-        int waste = 0;
-        waste = orangesProvided - orangesProcessed; // Calculate waste
-        return waste;
+        return orangesProvided - orangesProcessed;
     }
 
     /**
@@ -200,7 +192,9 @@ public class Plant implements Runnable {
             totalBottles += p.getBottles();
             totalWasted += p.getWaste();
         }
-        System.out.println("Total provided/processed = " + totalProvided + "/" + totalProcessed);
-        System.out.println("Created " + totalBottles + ", wasted " + totalWasted + " oranges");
+        System.out.println("Oranges Fetched = " + totalProvided);
+        System.out.println("Oranges Processed = " + totalProcessed);
+        System.out.println("Bottles Made = " + totalBottles);
+        System.out.println("Oranges Wasted = " + totalWasted);
     }
 }

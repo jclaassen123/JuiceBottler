@@ -8,10 +8,20 @@ public class BlockingMailbox {
     private Orange orange;
     private volatile boolean stopped = false;
 
+    /**
+     * Constructor initializes an empty mailbox.
+     */
     public BlockingMailbox() {
         orange = null;
     }
 
+    /**
+     * Puts an orange into the mailbox if it is empty.
+     * If the mailbox is full, the thread waits until it is empty.
+     * If stopped, it prevents adding new oranges.
+     *
+     * @param o The orange to be placed in the mailbox.
+     */
     public synchronized void put(Orange o) {
         while (!isEmpty() && !stopped) {
             try {
@@ -25,6 +35,13 @@ public class BlockingMailbox {
         notifyAll();
     }
 
+    /**
+     * Retrieves and removes the orange from the mailbox if available.
+     * If the mailbox is empty, the thread waits until an orange is available.
+     * If stopped and empty, returns null.
+     *
+     * @return The retrieved orange or null if stopped and empty.
+     */
     public synchronized Orange get() {
         while (isEmpty() && !stopped) {
             try {
@@ -40,15 +57,18 @@ public class BlockingMailbox {
         return ret;
     }
 
+    /**
+     * Checks if the mailbox is empty.
+     *
+     * @return true if empty, false otherwise.
+     */
     public synchronized boolean isEmpty() {
         return orange == null;
     }
 
-    /*
-    ChatGPT helped me add this method as a way to stop the threads from running when my
-    program was completed. It prevents new oranges from being added to the mailboxes and
-    allows threads to exit the waiting states once the simulation is complete. Otherwise
-    there was an infinite loop that was never completed in the main method.
+    /**
+     * Signals all waiting threads to stop execution.
+     * Prevents new oranges from being added and allows waiting threads to exit.
      */
     public synchronized void signalStop() {
         stopped = true;
